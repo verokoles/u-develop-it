@@ -44,36 +44,45 @@ router.get('/candidate/:id', (req, res) => {
         });
     });
 });
-//create candidate
+// Create a candidate
 router.post('/candidate', ({ body }, res) => {
     const errors = inputCheck(
-        body, 
-        'fist_name',
-        'last_name',
-        'industry_connected'
-        );
+      body,
+      'first_name',
+      'last_name',
+      'industry_connected'
+    );
     if (errors) {
-        res.status(400).json({ error: errors });
-        return;
+      res.status(400).json({ error: errors });
+      return;
     }
-    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected, party_id)
-    VALUES (?,?,?,?)`;
-    const params = [body.first_name, body.last_name, body.industry_connected, body.party_id];
-
+  
+    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected, party_id) VALUES (?,?,?,?)`;
+    const params = [
+      body.first_name,
+      body.last_name,
+      body.industry_connected,
+      body.party_id
+    ];
+  
     db.query(sql, params, (err, result) => {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'success',
-            data: body,
-            changes: result.affectedRows
-        });
+      if (err) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      res.json({
+        message: 'success',
+        data: body
+      });
     });
-});
+  });
 //update candidates party
 router.put('/candidate/:id', (req, res) => {
+    const errors = inputCheck(req.body, 'party_id');
+    if (errors) {
+      res.status(400).json({ error: errors });
+      return;
+    }  
     const sql = `UPDATE candidates SET party_id = ?
                       WHERE id = ?`;
     const params = [req.body.party_id, req.params.id];
@@ -97,11 +106,10 @@ router.put('/candidate/:id', (req, res) => {
 //DELETE candidate
 router.delete('/candidate/:id', (req, res) => {
     const sql = `DELETE FROM candidates WHERE id = ?`;
-    const params = [req.params.id];
 
-    db.query(sql, params, (err, result) => {
+    db.query(sql, req.params.id, (err, result) => {
         if (err) {
-            res.statusMessage(400).json({ error: res.message });
+            res.status(400).json({ error: res.message });
         } else if (!result.affectedRows) {
             res.json({
                 message: 'Candidate not found'
